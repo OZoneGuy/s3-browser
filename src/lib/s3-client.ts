@@ -35,7 +35,7 @@ export class S3Client {
   }
 
   async getKeys(prefix: string, invalidateCache?: boolean): Promise<string[] | null> {
-    if (!invalidateCache || this.keysCache[prefix]) {
+    if (this.keysCache[prefix] !== undefined && invalidateCache !== true) {
       return this.keysCache[prefix]
     }
 
