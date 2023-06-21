@@ -26,7 +26,7 @@ export class S3Client {
     }
 
     this.s3 = new S3({
-      region: 'us-east-1',
+      region: 'us-east-2',
       credentials: {
         accessKeyId: AWS_SECRET_ID,
         secretAccessKey: AWS_SECRET_KEY
