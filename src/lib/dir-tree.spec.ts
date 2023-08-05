@@ -1,42 +1,24 @@
-import type { Tree } from "./dir-tree";
-import { dirTree } from "./dir-tree";
-import { describe, expect, it } from "vitest";
+// import type { Tree } from "./dir-tree";
+// import { dirTree } from "./dir-tree";
+import { describe, expect, it } from 'vitest'
+import { normalizePath } from './dir-tree'
 
-describe("dir-tree", () => {
-    it("should return a Tree from a list of paths", () => {
-        const paths = [
-            "foo/bar",
-            "baz/qux",
-            "test"
-        ];
-        const expected: Tree = {
-            foo: {
-                bar: {}
-            },
-            baz: {
-                qux: {}
-            },
-            test: {}
-        }
+describe('dir-tree', () => {
+  it('should normalize the path', () => {
+    const path: string[] = ['a', 'b', 'c']
 
-        expect(dirTree(paths)).toEqual(expected);
-    });
+    expect(normalizePath(path)).toEqual('a/b/c')
+  })
 
-    it("should merge overlapping paths", () => {
-        const paths = [
-            "foo/bar",
-            "foo/baz",
-            "foo/bar/baz"
-        ];
-        const expected: Tree = {
-            foo: {
-                bar: {
-                    baz: {}
-                },
-                baz: {}
-            }
-        }
+  it('should return an empty string for an empty path', () => {
+    const path: string[] = []
 
-        expect(dirTree(paths)).toEqual(expected);
-    });
-});
+    expect(normalizePath(path)).toEqual('')
+  })
+
+  it('should normalize a string path', () => {
+    const path = 'docs'
+
+    expect(normalizePath(path)).toEqual('docs')
+  })
+})

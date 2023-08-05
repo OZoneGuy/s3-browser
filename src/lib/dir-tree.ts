@@ -1,22 +1,18 @@
-export interface Tree {
-    [name: string]: Tree | null;
-}
+export function normalizePath(path: string[] | string): string {
+  if (!path) {
+    return ''
+  }
 
-export function dirTree(paths: string[]): Tree {
-    const tree: Tree = {};
+  let normalizedPath: string
+  if (typeof path === 'string') {
+    normalizedPath = path
+  } else {
+    normalizedPath = path.join('/')
+  }
+  if (normalizedPath !== '') {
+    // TODO: Is the end slash needed?
+    normalizedPath += '/'
+  }
 
-    paths.forEach((path) => {
-        const parts = path.split('/');
-        let node = tree;
-
-        parts.forEach((part) => {
-            if (!node[part]) {
-                node[part] = {};
-            }
-
-            node = node[part] as Tree;
-        });
-    });
-
-    return tree;
+  return normalizedPath
 }
