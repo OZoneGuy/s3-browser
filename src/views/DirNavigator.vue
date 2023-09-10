@@ -27,7 +27,7 @@
       v-for="entry in entries"
       :key="entry.name"
       :name="entry.name"
-      :entryType="entry.type"
+      :entryType="entry.kind"
     />
   </div>
 </template>
@@ -81,8 +81,9 @@ const entries = computedAsync(
       console.error('no keys, some error happened')
       return
     }
+    console.debug({ keys })
     return keys
   },
-   [] as Entry[] 
+   [] as Entry[]
 )
 </script>

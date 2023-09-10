@@ -1,127 +1,55 @@
-import type {
-  ListObjectsCommandInput,
-  GetObjectCommandInput,
-  _Object,
-  ListObjectsCommandOutput
-} from '@aws-sdk/client-s3'
-import { S3Client as S3, ListObjectsCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { hostname } from './utils'
 
-interface KeysCache {
-  [key: string]: Entry[]
-}
-
-export type EntryType = 'dir' | 'pdf' | 'image' | 'other'
+export type EntryType = 'Dir' | 'File'
 
 export interface Entry {
   name: string
-  type: EntryType
+  kind: EntryType
+}
+
+interface S3ObjectResponse {
+  blob: string
+  name: string
+  mime_type: string
 }
 
 export class S3Client {
-  private s3: S3
-  private keysCache: KeysCache = {}
-  private bucket: string
+  async getKeys(prefix: string, _invalidateCache?: boolean): Promise<Entry[] | null> {
+    // Get the endpoint
+    const URL = `${hostname()}/s3/list_objects?path=${prefix}`
 
-  constructor() {
-    // get secrets from the environment
-    const AWS_SECRET_ID = import.meta.env.VITE_AWS_SECRET_ID
-    const AWS_SECRET_KEY = import.meta.env.VITE_AWS_SECRET_KEY
-
-    const AWS_BUCKET = import.meta.env.VITE_AWS_BUCKET
-    if (!AWS_BUCKET) {
-      throw new Error('AWS_BUCKET must be set')
-    }
-    this.bucket = AWS_BUCKET
-
-    if (!AWS_SECRET_ID || !AWS_SECRET_KEY) {
-      throw new Error('AWS_SECRET_ID and AWS_SECRET_KEY must be set')
-    }
-
-    this.s3 = new S3({
-      region: 'us-east-2',
-      credentials: {
-        accessKeyId: AWS_SECRET_ID,
-        secretAccessKey: AWS_SECRET_KEY
-      }
+    let resp = await fetch(URL, {
+      credentials: 'include'
     })
-  }
-
-  async getKeys(prefix: string, invalidateCache?: boolean): Promise<Entry[] | null> {
-    // check if the keys are cached
-    // TODO: check if the keys are cached in the local storage
-    if (this.keysCache[prefix] !== undefined && invalidateCache !== true) {
-      return this.keysCache[prefix]
-    }
-
-    // create the command input
-    const listCommandInput: ListObjectsCommandInput = {
-      Bucket: this.bucket,
-      Prefix: prefix,
-      Delimiter: '/'
-    }
-
-    // get the keys from the S3 bucket
-    const listCommand = new ListObjectsCommand(listCommandInput)
-    let listCommandOutput: ListObjectsCommandOutput
-    try {
-      listCommandOutput = await this.s3.send(listCommand)
-    } catch (e) {
-      console.error(e)
+    if (resp.status !== 200) {
+      console.error('Error fetching keys', resp)
       return null
     }
 
-    let entries: Entry[] = []
-
-    listCommandOutput.CommonPrefixes?.forEach((prefix) => {
-      entries.push({ name: prefix.Prefix!, type: 'dir' })
-    })
-
-    // get the files from `listCommandOutput.Contents` that are in the current dir
-    const prefixSize = prefix.split('/').length
-    listCommandOutput.Contents?.forEach((object: _Object) => {
-      const key = object.Key!
-      const keyParts = key.split('/')
-      if (keyParts.length !== prefixSize) {
-        return
-      }
-
-      let fileType: EntryType
-
-      if (key.endsWith('.pdf')) {
-        fileType = 'pdf'
-      } else if (key.endsWith('.png') || key.endsWith('.jpg')) {
-        fileType = 'image'
-      } else {
-        fileType = 'other'
-      }
-
-      entries.push({ name: keyParts[keyParts.length - 1], type: fileType })
-    })
-
-    // cache the entries
-    // TODO: save to the local storage
-    this.keysCache[prefix] = entries
+    let entries: Entry[] = await resp.json()
+    for (let i = 0; i < entries.length; i++) {
+      entries[i].name = entries[i].name.substring(prefix.length)
+    }
 
     return entries
   }
 
   async getObject(key: string): Promise<[Blob, string] | null> {
-    const commandInput: GetObjectCommandInput = {
-      Bucket: this.bucket,
-      Key: key
-    }
-
-    const command = new GetObjectCommand(commandInput)
-    let commandOutput
-    try {
-      commandOutput = await this.s3.send(command)
-    } catch (e) {
-      console.error(e)
+    const URL = `${hostname()}/s3/get_object?path=${key}`
+    const resp = await fetch(URL, {
+      credentials: 'include'
+    })
+    if (resp.status !== 200) {
+      console.error('Error fetching object', resp)
       return null
     }
+    const data: S3ObjectResponse = await resp.json()
+    const byteCharacters = atob(data.blob)
+    const byteArray = new Uint8Array(byteCharacters.length)
 
-    const body = await commandOutput.Body!.transformToByteArray()
-
-    return [new Blob([body]), commandOutput.ContentType!]
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteArray[i] = byteCharacters.charCodeAt(i)
+    }
+    return [new Blob([byteArray]), data.mime_type]
   }
 }
