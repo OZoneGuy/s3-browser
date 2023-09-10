@@ -1,14 +1,8 @@
 <template>
   <div class="dir-entry" @click="onClick">
     <div class="dir-entry__icon">
-      <template v-if="entryType === 'dir'">
+      <template v-if="entryType === 'Dir'">
         <i class="fas fa-folder"></i>
-      </template>
-      <template v-else-if="entryType === 'image'">
-        <i class="fas fa-file-image"></i>
-      </template>
-      <template v-else-if="entryType === 'pdf'">
-        <i class="fas fa-file-pdf"></i>
       </template>
       <template v-else>
         <i class="fas fa-file"></i>
