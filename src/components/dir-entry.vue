@@ -53,9 +53,9 @@ export default {
     onClick() {
 
       // navigate to the dir if it is a dir
-      console.debug(this.entryType)
       if (this.entryType === 'Dir') {
-        this.$router.push({ name: 'dir', params: { dir: this.name.slice(0, -1) } })
+        const dirPath = `${normalizePath(this.$route.params.dir)}${this.name}`
+        this.$router.push({ name: 'dir', params: { dir: dirPath.slice(0, -1) } })
         return
       }
 
