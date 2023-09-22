@@ -5,3 +5,7 @@ export function hostname(): string {
     return 'https://omaralkersh.com/api'
   }
 }
+
+export function base_url(): string {
+  return '/s3-browser/'
+}
