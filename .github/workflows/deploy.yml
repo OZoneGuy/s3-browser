@@ -1,0 +1,35 @@
+name: Deploy to Server
+on:
+  push:
+    paths-ignore:
+      - '.gitignore'
+    branches:
+      - 'main'
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ['self-hosted']
+    environment: api-server
+    steps:
+      - name: Checkout code
+        uses: actions/checout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'v20.3.0'
+      - name: Install packages
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: echo "No tests for now :)"
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+      - name: Deploy
+        run: scp -i ~/.ssh/id_rsa -r dist/* root@omaralkersh.com:/var/www/s3-browser
