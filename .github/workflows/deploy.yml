@@ -14,16 +14,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Setup node
-        uses: actions/setup-node@v3
+      - uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20.3.0'
-      - name: Install packages
-        run: npm ci
-      - name: Build
-        run: npm run build
-      - name: Test
-        run: echo "No tests for now :)"
+          bun-version: latest
+      - run: bun install
+      - run: bun run build
       - name: Setup SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH }}
