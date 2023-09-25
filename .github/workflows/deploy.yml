@@ -24,7 +24,7 @@ jobs:
             node_modules/
           key: ${{ runner.os }}-cargo
       - run: bun install
-      - run: bun run build
+      - run: bun run build-only
       - name: Setup SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH }}
