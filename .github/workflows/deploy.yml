@@ -33,4 +33,4 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
       - name: Deploy
-        run: scp -i ~/.ssh/id_rsa -r dist/* root@omaralkersh.com:/var/www/s3-browser
+        run: scp -i ~/.ssh/id_rsa -r dist/* ${{ vars.SERVER }}:/var/www/s3-browser
